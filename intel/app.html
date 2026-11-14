@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Barrix · Team intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Field ledger: paddy-green band, sage paper, monsoon blue for data, harvest gold for targets, laterite red for trouble */
+:root{--band:#10291e;--band2:#173a2a;--bg:#eef2ec;--surface:#fff;--surface2:#f5f8f3;--ink:#13221a;--ink-2:#41524a;--ink-3:#7b8a82;--line:#dbe3dc;
+  --leaf:#2e7d4f;--accent:#2f6fa8;--gold:#d9a21b;--good:#2e7d4f;--warn:#b7801a;--bad:#b4432b;
+  --gAp:#1e6b3f;--gA:#4c9a5e;--gB:#2f6fa8;--gC:#d9a21b;--gD:#b4432b;--soil:#b4432b;
+  --disp:'Bricolage Grotesque',ui-sans-serif,system-ui,sans-serif;--body:'Public Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--band:#0b1d15;--band2:#12301f;--bg:#0f1713;--surface:#16211b;--surface2:#1b2a22;--ink:#e7efe9;--ink-2:#b9c7be;--ink-3:#84958b;--line:#2a3b31;
+  --leaf:#5fb57f;--accent:#6ea6dc;--gold:#e8b94a;--good:#5fb57f;--warn:#e0a53c;--bad:#e2725a;--gAp:#3c9a62;--gA:#6db47e;--gB:#4f8cc6;--gC:#d9a21b;--gD:#cf5a40}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* band */
+header{position:sticky;top:0;z-index:20;background:var(--band);color:#eaf2ec;box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.hd{max-width:1340px;margin:0 auto;padding:12px 20px 4px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand small{display:block;font-size:12px;color:#9fb8a9;letter-spacing:.01em}.brand b{font:700 21px/1.15 var(--disp);letter-spacing:-.01em}
+.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:#cfe0d5}
+.sp{flex:1}
+.find input{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:8px 16px;width:280px;max-width:70vw}
+.find input::placeholder{color:#a9c0b2}.find input:focus{background:rgba(255,255,255,.14);outline:none;border-color:var(--gold)}
+#out{background:transparent;border:1px solid rgba(255,255,255,.25);color:#eaf2ec;border-radius:999px;padding:6px 14px;cursor:pointer}
+nav.tabs{max-width:1340px;margin:0 auto;padding:0 14px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav.tabs button{border:0;background:none;padding:10px 12px 11px;color:#a9c0b2;cursor:pointer;white-space:nowrap;position:relative;font-weight:500}
+nav.tabs button:hover{color:#fff}nav.tabs button.on{color:#fff}
+nav.tabs button.on::after{content:'';position:absolute;left:10px;right:10px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--gold)}
+main{max-width:1340px;margin:0 auto;padding:20px}
+/* surfaces */
+.row{display:grid;gap:14px}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.card h3{margin:0 0 12px;font:700 16px/1.25 var(--disp);letter-spacing:-.005em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.card h3 span{font:400 12.5px/1.4 var(--body);color:var(--ink-3)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;cursor:pointer}.btn:hover{border-color:var(--leaf)}
+.up{color:var(--good)}.down{color:var(--bad)}.warn{color:var(--warn)}.muted{color:var(--ink-3)}.sm{font-size:12.5px}
+/* grade marks */
+.gb{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 7px;border-radius:6px;font:800 12.5px/1 var(--disp);color:#fff;letter-spacing:.02em}
+.gb.Ap{background:var(--gAp)}.gb.A{background:var(--gA)}.gb.B{background:var(--gB)}.gb.C{background:var(--gC);color:#2b2000}.gb.D{background:var(--gD)}.gb.N{background:var(--line);color:var(--ink-3)}
+/* overview headline + metric strip */
+.lede{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:end;margin:2px 0 16px}
+.lede h1{margin:0;font:800 clamp(26px,3.4vw,40px)/1.08 var(--disp);letter-spacing:-.02em;max-width:22ch}
+.lede p{margin:8px 0 0;color:var(--ink-2);max-width:60ch}
+.gradebig{display:flex;flex-direction:column;gap:8px}
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.strip>div{padding:14px 16px;border-left:1px solid var(--line);min-width:0}.strip>div:first-child{border-left:0}
+.strip .l{font-size:12.5px;color:var(--ink-3)}.strip .v{font:700 24px/1.15 var(--disp);margin-top:4px;letter-spacing:-.01em}.strip .s{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0;margin-bottom:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.kpi{padding:12px 16px;border-left:1px solid var(--line);margin-left:-1px}
+.kpi .l{font-size:12.5px;color:var(--ink-3)}.kpi .v{font:700 22px/1.2 var(--disp);margin-top:3px}.kpi .s{font-size:12.5px;color:var(--ink-2)}
+/* tables */
+table{width:100%;border-collapse:collapse}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--ink-3);font-weight:600;white-space:nowrap;position:sticky;top:0;background:var(--surface);cursor:pointer;z-index:1}
+td.r,th.r{text-align:right}tr.clk{cursor:pointer}tr.clk:hover td{background:var(--surface2)}tbody tr:last-child td{border-bottom:0}
+.tw{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}.filters select,.filters input{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 12px}
+/* grade spread */
+.gdist{display:flex;height:28px;border-radius:8px;overflow:hidden;gap:2px}.gdist i{display:flex;align-items:center;justify-content:center;color:#fff;font:700 12px/1 var(--disp);font-style:normal;min-width:0;white-space:nowrap;overflow:hidden}
+.bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--line)}.bar i{display:block;height:100%;border-radius:4px}
+.mini{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:4px;min-width:60px}.mini i{display:block;height:100%;border-radius:3px}
+/* state rows */
+.strow{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(5,minmax(0,1fr)) minmax(0,1.1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.strow:last-child{border-bottom:0}.strow.h{font-size:12px;color:var(--ink-3);padding-top:0}.strow b{font:700 15px var(--disp)}
+/* focus lists */
+.focus{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px}.fgrp{min-width:0}.fgrp h4{margin:0 0 6px;font:700 13.5px var(--disp)}
+.frow{display:flex;gap:8px;align-items:center;padding:5px 6px;margin:0 -6px;border-radius:8px;cursor:pointer}.frow:hover{background:var(--surface2)}.frow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* profile hero: the grade, then the seven parameters as furrows */
+.phero{background:linear-gradient(160deg,var(--band) 0%,var(--band2) 100%);color:#eaf2ec;border-radius:18px;padding:22px 24px;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.15fr);gap:22px;align-items:center;margin-bottom:14px;position:relative;overflow:hidden}
+.phero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(170deg,transparent 0 22px,rgba(255,255,255,.025) 22px 23px);pointer-events:none}
+.gl{font:800 112px/0.85 var(--disp);letter-spacing:-.04em;color:var(--gc,#fff);text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.gl small{display:block;font:500 13px/1.3 var(--body);letter-spacing:0;color:#a9c0b2;margin-top:10px;text-shadow:none}
+.pid h2{margin:0;font:800 30px/1.1 var(--disp);letter-spacing:-.015em}.pid .who{color:#b8cdbf;margin-top:4px}.pid .rk{margin-top:10px;font-size:13px;color:#d5e3da}
+.pid .rk b{color:#fff}
+.keypts{margin:12px 0 0;padding:0;list-style:none;font-size:13.5px}.keypts li{padding:3px 0 3px 14px;position:relative;color:#e2ece5}
+.keypts li::before{content:'';position:absolute;left:0;top:10px;width:6px;height:6px;border-radius:50%;background:var(--gold)}.keypts li.down::before{background:#ef8a70}.keypts li.up::before{background:#8fd3a5}
+.furrow{position:relative;z-index:1}
+.fr{display:grid;grid-template-columns:150px minmax(0,1fr) 34px;gap:10px;align-items:center;height:30px}
+.fr .n{font-size:12.5px;color:#cfe0d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fr .v{font:700 14px var(--disp);text-align:right}
+.ft{position:relative;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 4px,transparent 4px 8px)}
+.ft .fill{position:absolute;left:0;top:-1px;height:4px;border-radius:2px;background:var(--fc)}
+.ft .dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--fc);border:2px solid var(--band);transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--fc)}
+.ft .peer{position:absolute;top:50%;width:10px;height:10px;border-radius:50%;border:2px solid #e7efe9;transform:translate(-50%,-50%);opacity:.7}
+.fleg{font-size:12px;color:#a9c0b2;margin-top:6px;display:flex;gap:14px}.fleg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+/* insights */
+.ins{border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px 16px;margin-bottom:10px;background:var(--surface);position:relative}
+.ins::before{content:'';position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--ink-3)}
+.ins.high::before{background:var(--bad)}.ins.mid::before{background:var(--gold)}.ins.good::before{background:var(--good)}.ins.low::before{background:var(--accent)}
+.ins .tag{font:700 13px var(--disp);margin-bottom:3px;display:flex;gap:8px;align-items:center}.ins .tag em{font:600 11.5px var(--body);font-style:normal;padding:1px 8px;border-radius:999px;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad)}
+.ins .tag em.ok{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.ins table{margin-top:6px;font-size:13px}.ins td{padding:5px 6px}.ins details summary{cursor:pointer;color:var(--accent);margin-top:8px;font-size:12.5px;font-weight:600}
+/* profile chrome */
+.pwrap{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
+.tnav{position:sticky;top:118px;max-height:calc(100vh - 134px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.tnh{font:700 15px var(--disp);padding:2px 8px 6px;display:flex;justify-content:space-between;align-items:baseline}.tst{font-size:12px;font-weight:600;color:var(--leaf);padding:10px 8px 2px}
+.tnav details>summary{list-style:none;cursor:pointer}.tnav details>summary::-webkit-details-marker{display:none}
+.tnav details>summary::before{content:'▸';display:inline-block;width:12px;color:var(--ink-3);font-size:11px}.tnav details[open]>summary::before{content:'▾'}
+.tk{margin-left:10px;border-left:1px solid var(--line);padding-left:4px}.leaf{padding-left:12px}
+.tn{display:inline-flex;align-items:center;gap:7px;padding:3px 7px;border-radius:8px;cursor:pointer;max-width:calc(100% - 14px)}.tn:hover{background:var(--surface2)}
+.tn.cur{background:color-mix(in srgb,var(--leaf) 14%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--leaf) 45%,transparent)}
+.tn .gb{min-width:24px;height:18px;font-size:10.5px}.tnn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+#navT{display:none}
+.pbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.pbar .btn{padding:5px 12px;font-size:13px}.pbar .btn[disabled]{opacity:.35;cursor:default}
+.btn.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface))}
+.crumbs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px;margin-bottom:10px}.crumbs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px 3px 4px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.crumbs .gb{min-width:22px;height:18px;font-size:10.5px}
+.secnav{display:flex;gap:6px;overflow-x:auto;padding:4px 0 12px;position:sticky;top:100px;z-index:5;background:var(--bg);scrollbar-width:none}
+.secnav button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}.secnav button:hover{border-color:var(--leaf);color:var(--leaf)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg text{fill:var(--ink-3);font:11px var(--body)}
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--band);color:#eaf2ec;font-size:12.5px;padding:6px 10px;border-radius:8px;display:none;max-width:280px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+/* team / watch / FO */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-top:8px}
+.wcard{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:14px 16px;cursor:pointer}.wcard:hover{border-color:var(--leaf)}
+.wcard b{font:700 15px var(--disp)}.wk{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;margin-top:8px;color:var(--ink-2)}
+.slots{display:inline-flex;gap:4px;vertical-align:middle}.slots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--leaf)}.slots i.f{background:var(--leaf)}.slots i.s{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 35%,transparent)}.slots i.e{border-style:dashed;border-color:var(--ink-3)}
+.note p{margin:0;font-size:15px;line-height:1.65;max-width:95ch}
+.card.note{margin-bottom:14px;border-left:4px solid var(--gold)}
+.hct td{padding:9px 10px}.fl{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.fl.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.fl.warn{background:color-mix(in srgb,var(--gold) 22%,transparent);color:var(--warn)}.fl.ok{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.spark{display:flex;gap:6px;align-items:flex-end;height:74px;margin-top:4px}.spark div{flex:1;max-width:44px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.spark i{display:block;width:100%;background:var(--soil);border-radius:3px 3px 0 0;opacity:.85}.spark span{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+.brief .lede h1{max-width:30ch}.brief .lede p{max-width:95ch;font-size:15px;line-height:1.6}
+@media print{header nav,.find,#out,.pbar,.secnav,.tnav,.tip{display:none!important}header{position:static;background:#fff;color:#000;box-shadow:none}.brand small,.chip{color:#333;background:none}body{background:#fff}.card{break-inside:avoid;border-color:#bbb}main{padding:0;max-width:none}}
+.how li{margin-bottom:4px}
+.par{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1.6fr) 40px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.par:last-child{border-bottom:0}
+.par .n{font-size:13.5px;font-weight:600}.par .n small{display:block;color:var(--ink-3);font-size:12px;font-weight:400}.par .sc{text-align:right;font:700 15px var(--disp)}
+.pb{position:relative;overflow:visible}.pk{position:absolute;top:-4px;width:2px;height:16px;background:var(--ink);border-radius:1px;transform:translateX(-1px)}
+.gdist.c{height:12px;border-radius:6px;gap:1px}
+@media (max-width:1100px){.strip{grid-template-columns:repeat(3,minmax(0,1fr))}.strip>div:nth-child(4){border-left:0}.strip>div:nth-child(n+4){border-top:1px solid var(--line)}.phero{grid-template-columns:auto minmax(0,1fr)}.furrow{grid-column:1/-1}}
+@media (max-width:900px){header{position:static}.pwrap{grid-template-columns:1fr}.tnav{display:none;position:static;max-height:60vh}.tnav.open{display:block}#navT{display:inline-block}.secnav{top:0}.find{order:5;flex-basis:100%}.find input{width:100%;max-width:none}.lede{grid-template-columns:1fr}.focus{grid-template-columns:1fr}
+  .strow{grid-template-columns:minmax(0,1.3fr) repeat(3,minmax(0,1fr))}.strow .hx{display:none}}
+@media (max-width:640px){main{padding:14px}.hd{padding:10px 14px 2px}.strip{grid-template-columns:repeat(2,minmax(0,1fr))}.strip>div{border-left:0;border-top:1px solid var(--line)}.strip>div:nth-child(-n+2){border-top:0}.strip>div:nth-child(even){border-left:1px solid var(--line)}
+  .phero{grid-template-columns:1fr;padding:18px}.gl{font-size:84px}.fr{grid-template-columns:118px minmax(0,1fr) 30px}.pid h2{font-size:24px}}
+@media (prefers-reduced-motion:no-preference){.ft .dot{animation:sow .6s ease-out both}@keyframes sow{from{left:0;opacity:0}}}
+</style>
+</head>
+<body>
+<header><div class="hd"><div class="brand"><small>Barrix Agro Sciences · Team intelligence</small><b id="who">—</b></div><div class="chips" id="chips"></div><div class="sp"></div><div class="find"><input id="find" list="findList" placeholder="🔍 Find an employee…" autocomplete="off"><datalist id="findList"></datalist></div><button class="btn" id="out" hidden>Sign out</button></div>
+<nav class="tabs" id="tabs"></nav></header>
+<main id="main"></main>
+<div class="tip" id="tip"></div>
+<script>
+const CFG = /*CFG*/;
+const DATA = /*MASTER*/;
+const SEEDX = /*SEED*/;
+(function () {
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const meta = DATA.meta; const fd = s => s ? new Date(s + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '–'; const ALL = DATA.people; const BY = Object.fromEntries(ALL.map(p => [p.id, p]));
+const TEAMS = { AP: 'Andhra Pradesh', TG: 'Telangana', KA: 'Karnataka', TN: 'Tamil Nadu & Kerala', MH: 'Maharashtra', MP: 'Madhya Pradesh', WB: 'West Bengal' };
+const scope = new Set(CFG.teams && CFG.teams.length ? CFG.teams : Object.keys(TEAMS));
+const PEOPLE = ALL.filter(p => scope.has(p.st));
+const MON = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+const money = v => { if (v == null || isNaN(v)) return '–'; const a = Math.abs(v), s = v < 0 ? '−' : ''; return a >= 1e7 ? `${s}₹${(a / 1e7).toFixed(2)} Cr` : `${s}₹${(a / 1e5).toFixed(1)} L`; };
+const pc = (v, d = 0) => v == null || !isFinite(v) ? '–' : (v * 100).toFixed(d) + '%';
+const gcls = g => g == null ? 'N' : g === 'A+' ? 'Ap' : g;
+const gb = g => `<span class="gb ${gcls(g)}">${g || '–'}</span>`;
+const GCOL = { 'A+': 'var(--gAp)', A: 'var(--gA)', B: 'var(--gB)', C: 'var(--gC)', D: 'var(--gD)' };
+const ach = p => p.k.aopY > 0 ? p.k.aopAct / p.k.aopY : null;
+const grow = p => p.k.ly > 0 ? p.k.net / p.k.ly - 1 : null;
+const soil = p => p.raw.mix != null ? p.raw.mix : null;
+const LVN = { 1: 'State Head', 2: 'Area Sales Manager', 3: 'Area Sales Executive', 4: 'Senior Sales Officer', 5: 'Sales Officer', 6: 'Field Officer' };
+let S = { tab: 'overview', emp: null, f: { st: '', lv: '', g: '', q: '' }, sort: ['score', 1] };
+try { const s = JSON.parse(sessionStorage.getItem('intelS') || 'null'); if (s) S = Object.assign(S, s); } catch (e) {}
+const save = () => { try { sessionStorage.setItem('intelS', JSON.stringify(S)); } catch (e) {} };
+
+$('#who').textContent = CFG.who || 'All India';
+$('#chips').innerHTML = [`Sales to ${fd(meta.salesTo)}`, `O/S as on ${fd(meta.osAsOn)}`, meta.fy, CFG.published ? 'Published ' + new Date(CFG.published).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''].filter(Boolean).map(t => `<span class="chip">${esc(t)}</span>`).join('');
+if (CFG.portal) { const b = $('#out'); b.hidden = false; b.onclick = () => { try { localStorage.removeItem('barrix-intel-login'); } catch (e) {} location.href = './'; }; }
+const TABS = [['overview', 'Overview'], ['brief', 'Management brief'], ['signals', 'Signals'], ['people', 'People & grades'], ['profile', 'Employee profile'], ['watch', '★ Watch list'], ['fo', 'Field officer plan'], ['mix', 'Product mix watch'], ['coll', 'Collections & outstanding'], ['how', 'How grades work']];
+function tabs() { $('#tabs').innerHTML = TABS.map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" data-t="${k}">${l}</button>`).join(''); $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.t)); }
+// address bar keeps the place, so the phone's Back button works: #people, #p/<employee id>, …
+function go(t) { const h = '#' + t; if (location.hash === h) { route(); } else location.hash = h; }
+function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (h.startsWith('p/')) { if (S.tab !== 'profile') S.from = S.tab; S.emp = h.slice(2); S.tab = 'profile'; }
+  else if (TABS.some(t => t[0] === h)) { S.tab = h; }
+  save(); render(); if (h.startsWith('p/')) window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', route);
+
+// ---------- small chart helpers (SVG) ----------
+function barsChart(series, opt) {     // series: [{v:[12], col, kind:'bar'|'line'|'dash', name}]
+  const W = 640, H = opt.h || 220, L = 44, B = 22, T = 10, R = 8; const n = 12;
+  const max = Math.max(1, ...series.flatMap(s => s.v.filter(x => x != null)));
+  const nice = (() => { const p = Math.pow(10, Math.floor(Math.log10(max))); const m = max / p; return (m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; })();
+  const x = i => L + (W - L - R) * (i + 0.5) / n, y = v => T + (H - T - B) * (1 - v / nice), bw = (W - L - R) / n * 0.62;
+  let g = '';
+  for (let k = 0; k <= 4; k++) { const v = nice * k / 4; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${(v / 1e5).toFixed(v / 1e5 < 10 ? 1 : 0)}</text>`; }
+  const bars = series.filter(s => s.kind === 'bar'); const bwi = bw / bars.length;
+  bars.forEach((s, j) => s.v.forEach((v, i) => { if (v == null) return; const h = Math.max(0, y(0) - y(Math.max(0, v))); g += `<rect x="${x(i) - bw / 2 + j * bwi}" y="${y(Math.max(0, v))}" width="${bwi - 1}" height="${h}" rx="3" fill="${s.col}" opacity="${opt.cm != null && i === opt.cm ? .5 : .92}" data-tip="${esc(s.name + ' ' + MON[i] + ': ' + money(v))}"/>`; }));
+  series.filter(s => s.kind !== 'bar').forEach(s => { const pts = s.v.map((v, i) => v == null ? null : [x(i), y(Math.max(0, v))]).filter(Boolean);
+    if (pts.length) g += `<polyline fill="none" stroke="${s.col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" ${s.kind === 'dash' ? 'stroke-dasharray="4 3"' : ''} points="${pts.map(p => p.join(',')).join(' ')}"/>` + s.v.map((v, i) => v == null ? '' : `<circle cx="${x(i)}" cy="${y(Math.max(0, v))}" r="3" fill="var(--surface)" stroke="${s.col}" stroke-width="1.5" data-tip="${esc(s.name + ' ' + MON[i] + ': ' + money(v))}"/>`).join(''); });
+  MON.forEach((m, i) => g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" style="${opt.cm === i ? 'font-weight:700;fill:var(--ink)' : ''}">${m}</text>`);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${esc(opt.label || 'chart')}">${g}</svg><div class="legend">${series.map(s => `<span><i style="background:${s.col}"></i>${esc(s.name)}</span>`).join('')}<span class="muted">₹ lakh</span></div>`;
+}
+function dial(score, grade) {
+  const r = 36, c = 2 * Math.PI * r, v = score == null ? 0 : score / 100;
+  return `<svg class="dial" viewBox="0 0 86 86"><circle cx="43" cy="43" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="43" cy="43" r="${r}" fill="none" stroke="${GCOL[grade] || 'var(--ink-3)'}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c * v} ${c}" transform="rotate(-90 43 43)"/><text x="43" y="41" text-anchor="middle" style="font-size:20px;font-weight:700;fill:var(--ink)">${grade || '–'}</text><text x="43" y="58" text-anchor="middle">${score == null ? 'not graded' : score.toFixed(0) + ' / 100'}</text></svg>`;
+}
+function gradeDist(list, compact) {
+  const c = { 'A+': 0, A: 0, B: 0, C: 0, D: 0 }; list.forEach(p => { if (p.grade) c[p.grade]++; }); const t = Object.values(c).reduce((a, b) => a + b, 0) || 1;
+  return `<div class="gdist${compact ? ' c' : ''}">${Object.entries(c).filter(([, n]) => n).map(([g, n]) => `<i style="flex:${n};background:${GCOL[g]}" data-tip="${g}: ${n} people">${compact ? '' : g + ' · ' + n}</i>`).join('')}</div>`;
+}
+function tbl(cols, rows, opt = {}) {
+  return `<div class="tw" style="${opt.max ? 'max-height:' + opt.max : ''}"><table><thead><tr>${cols.map((c, i) => `<th class="${c.r ? 'r' : ''}" data-i="${i}">${esc(c.h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr class="${r.id ? 'clk' : ''}" ${r.id ? `data-emp="${esc(r.id)}"` : ''}>${cols.map(c => `<td class="${c.r ? 'r num' : ''}">${c.f(r)}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${cols.length}" class="muted">Nothing to show.</td></tr>`}</tbody></table></div>`;
+}
+const wire = box => { box.querySelectorAll('[data-emp]').forEach(e => e.onclick = () => openEmp(e.dataset.emp)); };
+function openEmp(id) { go('p/' + id); }
+
+// ---------- scope roll-up ----------
+const roots = PEOPLE.filter(p => !p.mgr || !scope.has((BY[p.mgr] || {}).st) || !BY[p.mgr]);
+function sumK(list, f) { return list.reduce((a, p) => a + (f(p) || 0), 0); }
+const graded = PEOPLE.filter(p => p.grade);
+
+function overview() {
+  const R = roots; const net = sumK(R, p => p.k.net), ly = sumK(R, p => p.k.ly), act = sumK(R, p => p.k.aopAct), aop = sumK(R, p => p.k.aopY);
+  const coll = sumK(R, p => p.k.coll), os0 = sumK(R, p => p.k.os0), os = sumK(R, p => p.k.os), o180 = sumK(R, p => p.k.o180), o365 = sumK(R, p => p.k.o365);
+  const mixT = R.reduce((a, p) => { if (p.mix) p.mix.v.forEach((v, i) => a[i] = (a[i] || 0) + v); return a; }, []); const mixTot = mixT.reduce((a, b) => a + b, 0); const si = meta.cats.indexOf(meta.soil);
+  const states = [...scope].filter(t => R.some(p => p.st === t));
+  const st = states.map(t => { const r = R.filter(p => p.st === t); const g = graded.filter(p => p.st === t);
+    return { t, net: sumK(r, p => p.k.net), ly: sumK(r, p => p.k.ly), act: sumK(r, p => p.k.aopAct), aop: sumK(r, p => p.k.aopY), coll: sumK(r, p => p.k.coll), due: sumK(r, p => p.k.os0 + p.k.net), os: sumK(r, p => p.k.os), o180: sumK(r, p => p.k.o180), g,
+      soil: (() => { const m = r.reduce((a, p) => { if (p.mix) p.mix.v.forEach((v, i) => a[i] = (a[i] || 0) + v); return a; }, []); const tt = m.reduce((a, b) => a + b, 0); return tt ? m[si] / tt : null; })() }; });
+  const fieldG = graded.filter(p => p.lvl >= 4);
+  const top = fieldG.slice().sort((a, b) => b.score - a.score).slice(0, 8), bot = fieldG.slice().sort((a, b) => a.score - b.score).slice(0, 8);
+  const list = (L) => tbl([{ h: 'Grade', f: p => gb(p.grade) }, { h: 'Name', f: p => `<b>${esc(p.name)}</b><div class="muted sm">${esc(p.lv)} · ${esc(p.st)}</div>` }, { h: 'Score', r: 1, f: p => p.score.toFixed(0) }, { h: 'Target', r: 1, f: p => pc(ach(p)) }, { h: 'Net sales', r: 1, f: p => money(p.k.net) }], L, { max: '420px' });
+  const behind = graded.filter(p => p.grade === 'C' || p.grade === 'D').length; const tAch = aop ? act / aop : null;
+  const sc = [...scope].sort().join(','); const scopeName = sc === 'AP,KA,TG,TN' ? 'The South zone' : sc === 'MH,MP,WB' ? 'The North zone' : scope.size >= 7 ? 'The company' : 'Your states';
+  const mini = (v, col) => `<div class="mini"><i style="width:${Math.max(0, Math.min(100, (v || 0) * 100))}%;background:${col}"></i></div>`;
+  return `<section class="lede"><div><h1>${scopeName} is at ${pc(tAch)} of target, with ${behind} people needing coaching first.</h1>
+    <p>Net sales ${money(net)} this year (${ly ? (net >= ly ? '+' : '') + pc(net / ly - 1) + ' on last year' : 'no last-year figure'}), sales and outstanding to ${fd(meta.salesTo)}. Open anyone below, or type a name at the top, to see their full record and what to do next.</p></div>
+    <div class="gradebig"><div class="sm muted">Grades of ${graded.length} people</div>${gradeDist(graded)}</div></section>
+  <div class="strip">
+    <div><div class="l">Net sales this year</div><div class="v num">${money(net)}</div><div class="s">${ly ? `<span class="${net >= ly ? 'up' : 'down'}">${net >= ly ? '+' : ''}${pc(net / ly - 1)}</span> on last year` : ''}</div></div>
+    <div><div class="l">Target to date</div><div class="v num">${pc(tAch)}</div><div class="s">${money(act)} of ${money(aop)}</div></div>
+    <div><div class="l">Collection efficiency</div><div class="v num">${pc(os0 + net ? coll / (os0 + net) : null)}</div><div class="s">${money(coll)} collected</div></div>
+    <div><div class="l">Outstanding</div><div class="v num">${money(os)}</div><div class="s"><span class="warn">${pc(os ? o180 / os : null)}</span> over 180 days</div></div>
+    <div><div class="l">Over 365 days</div><div class="v num down">${money(o365)}</div><div class="s">${pc(os ? o365 / os : null)} of outstanding</div></div>
+    <div><div class="l">Soil Applications – Regular</div><div class="v num">${pc(mixTot ? mixT[si] / mixTot : null)}</div><div class="s">of sales, lowest margin</div></div>
+  </div>
+  <div class="row g2">
+    <div class="card"><h3>States <span>bars show target achieved and collection efficiency</span></h3>
+      <div class="strow h"><span>State</span><span class="r">Net sales</span><span>vs last year</span><span>Target</span><span class="hx">Collected</span><span class="hx">Over 180</span><span class="hx">Grades</span></div>
+      ${st.map(s => `<div class="strow"><b>${esc(TEAMS[s.t] || s.t)}</b><span class="num">${money(s.net)}</span><span class="num ${s.net >= s.ly ? 'up' : 'down'}">${s.ly ? (s.net >= s.ly ? '+' : '') + pc(s.net / s.ly - 1) : '–'}</span><span class="num">${pc(s.aop ? s.act / s.aop : null)}${mini(s.aop ? s.act / s.aop : 0, 'var(--gold)')}</span><span class="num hx">${pc(s.due ? s.coll / s.due : null)}${mini(s.due ? s.coll / s.due : 0, 'var(--leaf)')}</span><span class="num hx ${s.os && s.o180 / s.os > 0.3 ? 'down' : ''}">${pc(s.os ? s.o180 / s.os : null)}</span><span class="hx">${gradeDist(s.g, 1)}</span></div>`).join('')}</div>
+    <div class="card"><h3>Where to act first <span>across the field team</span></h3>${focus()}</div>
+  </div>
+  <div class="row g2" style="margin-top:14px"><div class="card"><h3>Top field performers <span>Senior SOs, SOs and FOs by score</span></h3>${list(top)}</div><div class="card"><h3>Need help first <span>lowest scores</span></h3>${list(bot)}</div></div>`;
+}
+function focus() {
+  const f = graded.filter(p => p.lvl >= 4);
+  const item = (t, L, val) => `<div class="fgrp"><h4>${t}</h4>${L.length ? L.map(p => `<div class="frow" data-emp="${esc(p.id)}">${gb(p.grade)}<span class="n">${esc(p.name)} <span class="muted sm">${esc(p.lv)}, ${esc(p.st)}</span></span><b class="num sm">${val(p)}</b></div>`).join('') : '<div class="muted sm">None</div>'}</div>`;
+  return '<div class="focus">' + item('Furthest behind target', f.filter(p => ach(p) != null && p.k.aopY - p.k.aopAct > 0).sort((a, b) => (b.k.aopY - b.k.aopAct) - (a.k.aopY - a.k.aopAct)).slice(0, 4), p => money(p.k.aopY - p.k.aopAct) + ' short')
+    + item('Most overdue (>180 days)', f.slice().sort((a, b) => b.k.o180 - a.k.o180).slice(0, 4), p => money(p.k.o180))
+    + item('Most Soil Applications – Regular', f.filter(p => soil(p) != null && p.k.net > 5e5).sort((a, b) => soil(b) - soil(a)).slice(0, 4), p => pc(soil(p)) + ' vs ' + pc(p.raw.mixRef))
+    + item('Weakest collections', f.filter(p => p.raw.coll != null && p.k.net > 5e5).sort((a, b) => a.raw.coll - b.raw.coll).slice(0, 4), p => pc(p.raw.coll) + ' collected') + '</div>';
+}
+
+function people() {
+  const F = S.f; const states = [...scope];
+  let L = PEOPLE.filter(p => (!F.st || p.st === F.st) && (!F.lv || String(p.lvl) === F.lv) && (!F.g || (F.g === 'none' ? !p.grade : p.grade === F.g)) && (!F.q || p.name.toLowerCase().includes(F.q.toLowerCase())));
+  const cols = [
+    { k: 'grade', h: 'Grade', f: p => gb(p.grade), s: p => p.score == null ? -1 : p.score },
+    { k: 'name', h: 'Employee', f: p => `<b>${esc(p.name)}</b><div class="muted sm">${esc(p.desig)} · ${esc(p.st)}${p.status !== 'Active' ? ' · ' + esc(p.status) : ''}</div>`, s: p => p.name },
+    { k: 'score', h: 'Score', r: 1, f: p => p.score == null ? '–' : p.score.toFixed(0), s: p => p.score == null ? -1 : p.score },
+    { k: 'rank', h: 'Peer rank', r: 1, f: p => p.rank ? `${p.rank[0]}/${p.rank[1]}` : '–', s: p => p.rank ? -p.rank[0] : -999 },
+    { k: 'net', h: 'Net sales', r: 1, f: p => money(p.k.net), s: p => p.k.net },
+    { k: 'ach', h: 'Target', r: 1, f: p => pc(ach(p)), s: p => ach(p) ?? -1 },
+    { k: 'grow', h: 'vs LY', r: 1, f: p => { const g = grow(p); return g == null ? '–' : `<span class="${g >= 0 ? 'up' : 'down'}">${g >= 0 ? '+' : ''}${pc(g)}</span>`; }, s: p => grow(p) ?? -9 },
+    { k: 'coll', h: 'Coll. eff.', r: 1, f: p => pc(p.raw.coll), s: p => p.raw.coll ?? -1 },
+    { k: 'o180', h: '>180 share', r: 1, f: p => pc(p.raw.osh), s: p => p.raw.osh ?? -1 },
+    { k: 'act', h: 'Billed dealers', r: 1, f: p => p.k.shops ? `${p.k.billed}/${p.k.shops}` : '–', s: p => p.raw.act ?? -1 },
+    { k: 'soil', h: 'Soil regular share', r: 1, f: p => soil(p) == null ? '–' : `<span class="${soil(p) > p.raw.mixRef + 0.05 ? 'down' : ''}">${pc(soil(p))}</span>`, s: p => soil(p) ?? -1 },
+    { k: 'ins', h: 'Actions', r: 1, f: p => p.ins.filter(i => i.sev === 'high').length ? `<span class="down">${p.ins.filter(i => i.sev === 'high').length} urgent</span>` : p.ins.filter(i => i.sev === 'mid').length || '–', s: p => p.ins.filter(i => i.sev === 'high').length * 10 + p.ins.filter(i => i.sev === 'mid').length }];
+  const sc = cols.find(c => c.k === S.sort[0]) || cols[2];
+  L.sort((a, b) => { const x = sc.s(a), y = sc.s(b); return (x < y ? -1 : x > y ? 1 : 0) * (S.sort[1] ? -1 : 1); });
+  const h = `<div class="filters"><select id="fst"><option value="">All states</option>${states.map(t => `<option value="${t}" ${F.st === t ? 'selected' : ''}>${TEAMS[t]}</option>`).join('')}</select>
+    <select id="flv"><option value="">All levels</option>${Object.entries(LVN).map(([k, v]) => `<option value="${k}" ${F.lv === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+    <select id="fg"><option value="">All grades</option>${['A+', 'A', 'B', 'C', 'D'].map(g => `<option ${F.g === g ? 'selected' : ''}>${g}</option>`).join('')}<option value="none" ${F.g === 'none' ? 'selected' : ''}>Not graded</option></select>
+    <input id="fq" placeholder="Find a name…" value="${esc(F.q)}"><span class="muted sm">${L.length} people · click a row for the full profile · click a heading to sort</span></div>`;
+  S.list = L.map(p => p.id);
+  return h + `<div id="ptab">${tblSort(cols, L)}</div>`;
+}
+function tblSort(cols, L) {
+  return `<div class="tw"><table><thead><tr>${cols.map(c => `<th class="${c.r ? 'r' : ''}" data-k="${c.k}">${esc(c.h)}${S.sort[0] === c.k ? (S.sort[1] ? ' ▾' : ' ▴') : ''}</th>`).join('')}</tr></thead><tbody>${L.map(p => `<tr class="clk" data-emp="${esc(p.id)}">${cols.map(c => `<td class="${c.r ? 'r num' : ''}">${c.f(p)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function wirePeople() {
+  const m = $('#main');
+  ['fst', 'flv', 'fg'].forEach(id => { const e = m.querySelector('#' + id); e.onchange = () => { S.f[{ fst: 'st', flv: 'lv', fg: 'g' }[id]] = e.value; save(); render(); }; });
+  const q = m.querySelector('#fq'); q.oninput = () => { S.f.q = q.value; save(); clearTimeout(q._t); q._t = setTimeout(() => { render(); const n = $('#fq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+  m.querySelectorAll('th[data-k]').forEach(th => th.onclick = () => { S.sort = [th.dataset.k, S.sort[0] === th.dataset.k ? 1 - S.sort[1] : 1]; save(); render(); });
+}
+
+function profile() {
+  let p = BY[S.emp]; if (!p || !scope.has(p.st)) p = null;
+  if (!p) return `<div class="pwrap"><aside class="tnav open">${treeNav(null)}</aside><div class="card"><h3>Pick an employee</h3><p class="sm">Type a name in <b>Find an employee</b> at the top, or open anyone from the team list on the left, the People tab or the Overview lists.</p>${watchCards()}</div></div>`;
+  S.emp = p.id;
+  const chain = []; let c = p.mgr; while (c && BY[c]) { chain.unshift(BY[c]); c = BY[c].mgr; }
+  const k = p.k; const a = ach(p), g = grow(p);
+  const W = meta.weights, NM = meta.wnames;
+  const peers = PEOPLE.filter(x => x.zone === p.zone && x.lvl === p.lvl && x.score != null);
+  const pavg = key => { const v = peers.map(x => x.s[key]).filter(x => x != null); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+  const RAW = { target: v => pc(v) + ' of target to date', growth: v => (v >= 0 ? '+' : '') + pc(v) + ' vs same period last year', coll: v => pc(v) + ' of dues collected', osh: v => pc(v) + ' of O/S over 180 days', act: v => pc(v) + ' of beat dealers billed', mix: v => pc(v) + ' Soil vs ' + pc(p.raw.mixRef) + ' state', old: v => pc(v) + ' of O/S over 365 days' };
+  const pars = Object.keys(W).map(key => { const pa = pavg(key); return `<div class="par"><div class="n">${esc(NM[key])}<small>${p.raw[key] != null ? RAW[key](p.raw[key]) : 'not applicable'} · weight ${W[key]}%</small></div><div class="bar pb"><i style="width:${p.s[key] ?? 0}%;background:${p.s[key] == null ? 'var(--line)' : p.s[key] >= 65 ? 'var(--good)' : p.s[key] >= 40 ? 'var(--warn)' : 'var(--bad)'}"></i>${pa != null ? `<b class="pk" style="left:${pa}%" data-tip="Average of ${peers.length} ${esc(LVN[p.lvl] || '')}s in the zone: ${pa.toFixed(0)}"></b>` : ''}</div><div class="sc num">${p.s[key] == null ? '–' : p.s[key].toFixed(0)}</div></div>`; }).join('');
+  const ms = p.m; const cm = meta.cm;
+  // month-by-month tracking
+  let cT = 0, cA = 0, cL = 0;
+  const trows = MON.map((m, i) => { const t = ms.aop ? ms.aop[i] || 0 : null, ac = i <= cm ? ms.act[i] : null, ly = ms.ly[i], rc = i <= cm ? ms.rec[i] : null;
+    const tt = t == null ? null : i === cm ? t * meta.frac : t;               // this month: the target so far (by days gone)
+    if (i <= cm) { cT += tt || 0; cA += ac || 0; cL += ly || 0; }
+    return { m, i, t, tt, ac, ly, rc, cT: i <= cm ? cT : null, cA: i <= cm ? cA : null, cL: i <= cm ? cL : null }; });
+  const cum = barsChart([{ v: trows.map(r => r.cA), col: 'var(--accent)', kind: 'line', name: 'Actual (running total)' }, ...(ms.aop ? [{ v: (() => { let x = 0; return ms.aop.map(v => (x += v || 0)); })(), col: 'var(--gold)', kind: 'line', name: 'Target (running total)' }] : []), { v: (() => { let x = 0; return ms.ly.map(v => (x += v || 0)); })(), col: 'var(--ink-3)', kind: 'dash', name: 'Last year (running total)' }], { cm, label: 'Running total' });
+  const ttab = `<div class="tw" style="max-height:none"><table class="sm"><thead><tr><th>Month</th><th class="r">Target</th><th class="r">Actual</th><th class="r">Achieved</th><th class="r">Last year</th><th class="r">vs LY</th><th class="r">Collected</th><th class="r">Running achieved</th></tr></thead><tbody>${trows.map(r => `<tr style="${r.i === cm ? 'font-weight:600' : r.i > cm ? 'color:var(--ink-3)' : ''}"><td>${r.m}${r.i === cm ? ' <span class="muted sm">(so far)</span>' : ''}</td><td class="r num">${r.t == null ? '–' : money(r.t)}${r.i === cm && r.t ? `<div class="muted sm">${money(r.tt)} so far</div>` : ''}</td><td class="r num">${r.ac == null ? '' : money(r.ac)}</td><td class="r num">${r.ac == null || !(r.tt > 0) ? '' : `<span class="${r.ac >= r.tt ? 'up' : r.ac >= 0.8 * r.tt ? 'warn' : 'down'}">${pc(r.ac / r.tt)}</span>`}</td><td class="r num">${money(r.ly)}</td><td class="r num">${r.ac == null || !(r.ly > 0) || r.i === cm ? '' : `<span class="${r.ac >= r.ly ? 'up' : 'down'}">${r.ac >= r.ly ? '+' : ''}${pc(r.ac / r.ly - 1)}</span>`}</td><td class="r num">${r.rc == null ? '' : money(r.rc)}</td><td class="r num">${r.cT ? pc(r.cA / r.cT) : ''}</td></tr>`).join('')}</tbody></table></div>`;
+  const chart = barsChart([{ v: ms.act.map((v, i) => i <= cm ? v : null), col: 'var(--accent)', kind: 'bar', name: 'Actual' }, ...(ms.aop ? [{ v: ms.aop, col: 'var(--gold)', kind: 'line', name: 'Target (AOP)' }] : []), { v: ms.ly, col: 'var(--ink-3)', kind: 'dash', name: 'Last year' }], { cm, label: 'Monthly sales' });
+  const rchart = barsChart([{ v: ms.rec.map((v, i) => i <= cm ? v : null), col: 'var(--leaf)', kind: 'bar', name: 'Collections' }, { v: ms.act.map((v, i) => i <= cm ? v : null), col: 'var(--accent)', kind: 'line', name: 'Sales' }], { cm, h: 180, label: 'Monthly collections' });
+  const sn = p.snaps ? `<table class="sm"><thead><tr><th>Statement</th><th class="r">Outstanding</th><th class="r">Over 365 days</th><th class="r">Change in >365</th></tr></thead><tbody>${meta.snaps.map((d, i) => { const ch = i ? p.snaps[i][1] - p.snaps[i - 1][1] : null; return `<tr><td>${fd(d)}</td><td class="r num">${money(p.snaps[i][0])}</td><td class="r num">${money(p.snaps[i][1])}</td><td class="r num">${ch == null || Math.abs(ch) < 1 ? '' : `<span class="${ch > 0 ? 'down' : 'up'}">${ch > 0 ? '▲' : '▼'} ${money(Math.abs(ch))}</span>`}</td></tr>`; }).join('')}</tbody></table>` : '<div class="muted sm">No outstanding history.</div>';
+  const B = k.b; const BC = ['#3aa45f', '#a7c957', '#d99a1e', '#e07a3f', '#c8402f'], BL = ['0–90', '91–180', '181–300', '301–365', '>365'];
+  const aging = `<div class="gdist" style="height:18px">${B.map((v, i) => v > 0 ? `<i style="flex:${v};background:${BC[i]}" data-tip="${BL[i]} days: ${money(v)}"></i>` : '').join('')}</div><div class="legend">${BL.map((l, i) => `<span><i style="background:${BC[i]}"></i>${l}: ${money(B[i])}</span>`).join('')}</div>`;
+  const ref = meta.ref[p.st]; const CC = meta.cats.map(c => /soil.*regular/i.test(c) ? '#c8553d' : /soil/i.test(c) ? '#e3a07e' : /bio/i.test(c) ? '#3a7bd5' : /pheromone/i.test(c) ? '#1f9e89' : /chromatic/i.test(c) ? '#8a5cc7' : /micro/i.test(c) ? '#d99a1e' : '#a3a19a');
+  const mixBar = (m, lab) => { if (!m || !(m.tot > 0)) return ''; return `<div style="display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;margin:4px 0"><span class="sm">${esc(lab)}</span><div class="gdist" style="height:18px">${m.v.map((v, i) => v > 0 ? `<i style="flex:${v};background:${CC[i]}" data-tip="${esc(meta.cats[i])}: ${pc(v / m.tot)} (${money(v)})"></i>` : '').join('')}</div></div>`; };
+  const mix = p.mix && p.mix.tot > 0 ? mixBar(p.mix, p.kids.length ? 'Team' : 'Own') + mixBar(ref, TEAMS[p.st]) + `<table class="sm" style="margin-top:8px"><thead><tr><th>Category</th><th class="r">Sales</th><th class="r">Share</th><th class="r">State</th></tr></thead><tbody>${meta.cats.map((c, i) => (p.mix.v[i] || (ref && ref.v[i])) ? `<tr style="${c === meta.soil ? 'color:var(--bad);font-weight:600' : ''}"><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${CC[i]};margin-right:6px"></i>${esc(c)}${c === meta.soil ? ' · lowest margin' : ''}</td><td class="r num">${money(p.mix.v[i])}</td><td class="r num">${p.mix.v[i] > 0 ? pc(p.mix.v[i] / p.mix.tot) : '–'}</td><td class="r num">${ref && ref.tot ? pc(ref.v[i] / ref.tot) : '–'}</td></tr>` : '').join('')}</tbody></table>` : '<div class="muted sm">No sales this year.</div>';
+  const insH = p.ins.map(i => `<div class="ins ${i.sev}"><div class="tag">${esc(AREA[i.a] || i.a)}${i.sev === 'high' ? '<em>Urgent</em>' : i.sev === 'good' ? '<em class="ok">On track</em>' : ''}</div><div>${esc(i.t)}</div>${i.items.length ? `<details ${i.sev === 'high' ? 'open' : ''}><summary class="sm">${i.a === 'team' ? 'People' : 'Dealers'} (${i.items.length})</summary><table>${i.items.map(x => i.a === 'team' ? `<tr class="clk" data-emp="${esc(x[0])}"><td>${gb(x[3])}</td><td>${esc(x[1])}</td><td class="muted">${esc(x[2])}</td><td class="r num">${x[4].toFixed(0)}</td></tr>` : `<tr><td>${esc(x[1])}<div class="muted sm">${esc(x[0])} · ${esc(x[2])}${p.kids.length ? ' · ' + esc(x[3]) : ''}</div></td><td class="r num">${money(x[4])}</td>${x[5] != null ? `<td class="muted sm">${esc(x[5])}</td>` : ''}</tr>`).join('')}</table></details>` : ''}</div>`).join('') || '<div class="muted">No issues found.</div>';
+  const keyPts = p.ins.filter(i => i.sev !== 'low').slice(0, 3).map(i => `<li class="${i.sev === 'high' ? 'down' : i.sev === 'good' ? 'up' : ''}">${esc(i.t.split(/(?<=\.)\s/)[0])}</li>`).join('');
+  const soilPts = (p.x.soilM || []).map((v, i) => i <= cm ? v : null);
+  const healthH = (p.hc || []).length ? `<table class="hct"><thead><tr><th>Check</th><th class="r">This ${p.kids.length ? 'team' : 'person'}</th><th>Compared with</th><th></th></tr></thead><tbody>${p.hc.map(h => `<tr data-tip="${esc(h[4])}"><td>${esc(h[0])}</td><td class="r num"><b>${esc(h[1])}</b></td><td class="muted">${esc(h[2])}</td><td>${h[3] === 2 ? '<span class="fl bad">Look into this</span>' : h[3] === 1 ? '<span class="fl warn">Watch</span>' : '<span class="fl ok">Fine</span>'}</td></tr>`).join('')}</tbody></table>
+    ${soilPts.some(v => v != null) ? `<div class="sm muted" style="margin-top:10px">Soil Applications - Regular share by month</div><div class="spark">${soilPts.map((v, i) => v == null ? '' : `<div data-tip="${MON[i]}: ${pc(v)}"><i style="height:${Math.max(2, Math.min(100, v * 100))}%"></i><span>${MON[i]}</span></div>`).join('')}</div>` : ''}` : '<div class="muted">Not enough activity to check.</div>';
+  const kids = p.kids.map(id => BY[id]).filter(Boolean);
+  const kidsH = kids.length ? `<div class="card sec" id="sec-team"><h3>Direct reports <span>${kids.length} · sorted by score · click to open</span></h3>${tbl([{ h: 'Grade', f: x => gb(x.grade) }, { h: 'Name', f: x => `<b>${esc(x.name)}</b><div class="muted sm">${esc(x.desig)}${x.status !== 'Active' ? ' · ' + esc(x.status) : ''}</div>` }, { h: 'Score', r: 1, f: x => x.score == null ? '–' : x.score.toFixed(0) }, { h: 'Net sales', r: 1, f: x => money(x.k.net) }, { h: 'Target', r: 1, f: x => pc(ach(x)) }, { h: 'vs LY', r: 1, f: x => { const gg = grow(x); return gg == null ? '–' : `<span class="${gg >= 0 ? 'up' : 'down'}">${gg >= 0 ? '+' : ''}${pc(gg)}</span>`; } }, { h: 'Coll. eff.', r: 1, f: x => pc(x.raw.coll) }, { h: '>180', r: 1, f: x => money(x.k.o180) }, { h: 'Soil reg.', r: 1, f: x => pc(soil(x)) }], kids.sort((x, y) => (y.score ?? -1) - (x.score ?? -1)), { max: 'none' })}</div>` : '';
+  const sf = p.staff ? `<div class="card sec" id="sec-fo"><h3>Field officers <span>norm: ${p.staff.norm} FOs under each Sales Officer</span></h3><div class="kpis" style="margin:0"><div class="kpi"><div class="l">FOs now</div><div class="v">${p.staff.fos}</div></div><div class="kpi"><div class="l">Suggested to add</div><div class="v">${p.staff.sug}</div><div class="s">gap to norm ${p.staff.gap}</div></div><div class="kpi"><div class="l">Expected by March</div><div class="v num">${money(p.staff.uplift)}</div><div class="s">projected shortfall ${money(p.staff.short)}</div></div><div class="kpi"><div class="l">Beat dealers per person</div><div class="v">${p.staff.load}</div></div></div></div>` : '';
+  const L = (S.list || []).filter(id => BY[id] && scope.has(BY[id].st)); const pos = L.indexOf(p.id);
+  const prev = pos > 0 ? L[pos - 1] : null, next = pos >= 0 && pos < L.length - 1 ? L[pos + 1] : null;
+  const w = watched().includes(p.id);
+  const SEC = [['sec-sum', 'Summary'], ['sec-note', 'Manager\'s note'], ['sec-act', 'What to do'], ['sec-grade', 'Grade'], ['sec-health', 'Health checks'], ['sec-track', 'Month by month'], ['sec-coll', 'Collections'], ['sec-os', 'Outstanding'], ['sec-mix', 'Product mix'], ...(kids.length ? [['sec-team', 'Team']] : []), ...(p.staff ? [['sec-fo', 'Field officers']] : [])];
+  return `<div class="pwrap"><aside class="tnav" id="tnav">${treeNav(p.id)}</aside><div style="min-width:0">
+  <div class="pbar"><button class="btn sm" id="navT">☰ Team list</button>${S.from ? `<button class="btn sm" data-goto="${esc(S.from)}">‹ Back to ${esc((TABS.find(t => t[0] === S.from) || [, 'list'])[1])}</button>` : ''}
+    <span class="sp"></span>${L.length > 1 && pos >= 0 ? `<span class="muted sm">${pos + 1} of ${L.length}</span>` : ''}<button class="btn sm" ${prev ? `data-emp="${esc(prev)}"` : 'disabled'}>‹ Previous</button><button class="btn sm" ${next ? `data-emp="${esc(next)}"` : 'disabled'}>Next ›</button>
+    <button class="btn sm ${w ? 'on' : ''}" id="star" title="Keep this person on your watch list">${w ? '★ Watching' : '☆ Watch'}</button></div>
+  <div class="crumbs">${chain.map(x => `<button data-emp="${esc(x.id)}">${gb(x.grade)} ${esc(x.name)} · ${esc(x.lv)}</button>`).join('<span class="muted">›</span>')}</div>
+  <section class="phero sec" id="sec-sum"><div class="gl" style="--gc:${({ 'A+': '#8fe0ab', A: '#c3e8a6', B: '#9cc7f0', C: '#f2c94c', D: '#f39a7e' })[p.grade] || '#cfe0d5'}">${esc(p.grade || '–')}<small>${p.score == null ? 'not graded' : 'score ' + p.score.toFixed(0) + ' of 100'}</small></div>
+    <div class="pid"><h2>${esc(p.name)}</h2><div class="who">${esc(p.desig)}, ${esc(TEAMS[p.st] || p.st)}${p.base ? ', based in ' + esc(p.base) : ''}${p.status !== 'Active' ? ' — <b style="color:#ef8a70">' + esc(p.status) + '</b>' : ''}</div>
+      <div class="rk">${p.rank ? `Rank <b>${p.rank[0]}</b> of ${p.rank[1]} ${esc(LVN[p.lvl] || '')}s in the ${esc(p.zone)} zone. ` : ''}${p.kids.length ? `Team of ${p.teamSize}, ` : ''}${k.shops} beat dealers in ${k.dists} districts.</div>
+      ${keyPts ? `<ul class="keypts">${keyPts}</ul>` : ''}</div>
+    <div class="furrow">${Object.keys(W).map(key => { const v = p.s[key], pa = pavg(key); const col = v == null ? '#6c7f74' : v >= 65 ? '#7fd09a' : v >= 40 ? '#e8b94a' : '#ef8a70';
+      return `<div class="fr" data-tip="${esc(NM[key] + ': ' + (p.raw[key] != null ? RAW[key](p.raw[key]) : 'not applicable') + (pa != null ? ' · peers average ' + pa.toFixed(0) : ''))}"><span class="n">${esc(NM[key].replace(/ \(.*\)$/, ''))}</span><div class="ft" style="--fc:${col}">${v != null ? `<span class="fill" style="width:${v}%"></span>` : ''}${pa != null ? `<span class="peer" style="left:${pa}%"></span>` : ''}${v != null ? `<span class="dot" style="left:${v}%"></span>` : ''}</div><span class="v num">${v == null ? '–' : v.toFixed(0)}</span></div>`; }).join('')}
+      <div class="fleg"><span><i style="background:#7fd09a"></i>this person (0–100)</span><span><i style="border:2px solid #e7efe9"></i>average of peers</span></div></div></section>
+  <div class="secnav">${SEC.map(([id, l]) => `<button data-sec="${id}">${l}</button>`).join('')}</div>
+  ${p.note ? `<div class="card note sec" id="sec-note"><h3>Manager's note <span>written from this person's numbers; refreshed with every data update</span></h3><p>${esc(p.note)}</p></div>` : ''}
+  <div class="kpis">
+    <div class="kpi"><div class="l">Net sales this year</div><div class="v num">${money(k.net)}</div><div class="s">${g == null ? 'no sales last year' : `<span class="${g >= 0 ? 'up' : 'down'}">${g >= 0 ? '+' : ''}${pc(g)}</span> vs ${money(k.ly)} last year`}</div></div>
+    <div class="kpi"><div class="l">Target to date</div><div class="v num">${pc(a)}</div><div class="s">${money(k.aopAct)} of ${money(k.aopY)} · full year ${money(k.aopFY)}</div></div>
+    <div class="kpi"><div class="l">Year-end forecast</div><div class="v num ${k.aopFY && p.x.fc < k.aopFY ? 'down' : 'up'}">${money(p.x.fc)}</div><div class="s">${p.x.fSeason ? 'range ' + money(p.x.fLo) + ' to ' + money(p.x.fHi) : 'at the pace so far'}${k.need != null && k.need > 0 ? ' · needs ' + money(k.need) + '/month' : ''}</div></div>
+    <div class="kpi"><div class="l">Collections</div><div class="v num">${money(k.coll)}</div><div class="s">${pc(p.raw.coll)} of dues · ${money(k.collM)} this month</div></div>
+    <div class="kpi"><div class="l">Outstanding</div><div class="v num">${money(k.os)}</div><div class="s"><span class="warn">${money(k.o180)}</span> >180 · <span class="down">${money(k.o365)}</span> >365</div></div>
+    <div class="kpi"><div class="l">Dealers billed</div><div class="v num">${k.billed}<span class="muted" style="font-size:14px"> / ${k.shops}</span></div><div class="s">${k.newD} new · ${k.lapsed} lapsed · ${k.below} below LY</div></div>
+  </div>
+  <div class="row g2"><div class="card sec" id="sec-act"><h3>What to do <span>coaching points, most urgent first</span></h3>${insH}</div>
+    <div class="card sec" id="sec-grade"><h3>Score details <span>what each part of the grade is made of; tick = average of peers at the same level</span></h3>${pars}</div></div>
+  <div class="card sec" id="sec-health" style="margin-top:12px"><h3>Health checks <span>patterns behind the numbers, compared with the state</span></h3>${healthH}</div>
+  <div class="card sec" id="sec-track" style="margin-top:12px"><h3>Month by month <span>${esc(meta.fy)} · target, actual, last year and collections</span></h3><div class="row g2"><div>${chart}</div><div>${cum}</div></div><div style="margin-top:10px">${ttab}</div></div>
+  <div class="row g2" style="margin-top:12px"><div class="card sec" id="sec-coll"><h3>Collections by month</h3>${rchart}</div>
+    <div class="card sec" id="sec-os"><h3>Outstanding history <span>statement by statement</span></h3>${sn}<div style="margin-top:10px">${aging}</div></div></div>
+  <div class="card sec" id="sec-mix" style="margin-top:12px"><h3>Product mix <span>compared with ${esc(TEAMS[p.st] || p.st)}</span></h3>${mix}</div>
+  ${sf}${kidsH}</div></div>`;
+}
+const AREA = { target: 'Target', growth: 'Growth', dealers: 'Dealers', collections: 'Collections', outstanding: 'Outstanding', mix: 'Product mix', team: 'Team', staffing: 'Field officers' };
+function treeNav(cur) {
+  const open = new Set(); if (cur) { let c = cur; while (c && BY[c]) { open.add(c); c = BY[c].mgr; } }
+  const node = (p, d) => { const kids = p.kids.map(id => BY[id]).filter(x => x && scope.has(x.st)).sort((x, y) => x.lvl - y.lvl || x.name.localeCompare(y.name));
+    const lab = `<span class="tn ${p.id === cur ? 'cur' : ''}" data-emp="${esc(p.id)}">${gb(p.grade)}<span class="tnn">${esc(p.name)}</span><span class="muted sm">${esc(p.lv)}</span></span>`;
+    return kids.length ? `<details ${open.has(p.id) || d === 0 ? 'open' : ''}><summary>${lab}</summary><div class="tk">${kids.map(x => node(x, d + 1)).join('')}</div></details>` : `<div class="leaf">${lab}</div>`; };
+  const states = [...scope].filter(t => roots.some(r => r.st === t));
+  return `<div class="tnh">Team list <span class="muted sm">${PEOPLE.length} people</span></div>` + states.map(t => `<div class="tst">${esc(TEAMS[t])}</div>` + roots.filter(r => r.st === t).map(r => node(r, 0)).join('')).join('');
+}
+const WKEY = 'barrix-intel-watch';
+function watched() { try { return JSON.parse(localStorage.getItem(WKEY) || '[]'); } catch (e) { return []; } }
+function setWatch(a) { try { localStorage.setItem(WKEY, JSON.stringify(a)); } catch (e) {} }
+function watchCards() {
+  const L = watched().map(id => BY[id]).filter(p => p && scope.has(p.st));
+  if (!L.length) return `<p class="muted sm" style="margin-top:12px">Your watch list is empty. Open a person and press ☆ Watch to follow them here.</p>`;
+  return `<div class="wgrid">${L.map(p => { const top = p.ins.find(i => i.sev === 'high') || p.ins.find(i => i.sev === 'mid'); return `<button class="wcard" data-emp="${esc(p.id)}"><div style="display:flex;gap:8px;align-items:center">${gb(p.grade)}<b>${esc(p.name)}</b><span class="muted sm">${esc(p.lv)} · ${esc(p.st)}</span></div>
+    <div class="wk"><span>Target <b class="num">${pc(ach(p))}</b></span><span>vs LY <b class="num ${(grow(p) ?? 0) >= 0 ? 'up' : 'down'}">${grow(p) == null ? '–' : pc(grow(p))}</b></span><span>Coll. <b class="num">${pc(p.raw.coll)}</b></span><span>>180 <b class="num">${money(p.k.o180)}</b></span><span>Soil <b class="num">${pc(soil(p))}</b></span></div>
+    ${top ? `<div class="sm ${top.sev === 'high' ? 'down' : 'warn'}" style="margin-top:4px">${esc(top.t.split(/(?<=\.)\s/)[0])}</div>` : ''}</button>`; }).join('')}</div>`;
+}
+function watch() { return `<div class="card"><h3>Watch list <span>people you follow · kept on this device</span></h3>${watchCards()}</div>`; }
+function wireProfile() {
+  const m = $('#main');
+  const st = m.querySelector('#star'); if (st) st.onclick = () => { const a = watched(); const i = a.indexOf(S.emp); if (i >= 0) a.splice(i, 1); else a.push(S.emp); setWatch(a); render(); };
+  const nt = m.querySelector('#navT'); if (nt) nt.onclick = () => m.querySelector('#tnav').classList.toggle('open');
+  m.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => { const e = document.getElementById(b.dataset.sec); if (e) window.scrollTo({ top: e.getBoundingClientRect().top + scrollY - 120, behavior: 'smooth' }); });
+  m.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => go(b.dataset.goto));
+  const cur = m.querySelector('.tn.cur'); if (cur) { const n = m.querySelector('#tnav'); n.scrollTop = Math.max(0, cur.offsetTop - n.clientHeight / 3); }
+}
+
+function fo() {
+  const L = PEOPLE.filter(p => p.staff); const sug = sumK(L, p => p.staff.sug), up = sumK(L, p => p.staff.uplift), short = sumK(L, p => p.staff.short), fos = sumK(L, p => p.staff.fos);
+  const states = [...scope].filter(t => L.some(p => p.st === t));
+  const pr = L.filter(p => p.staff.sug).sort((a, b) => (b.staff.short * b.staff.load) - (a.staff.short * a.staff.load)); S.list = pr.map(p => p.id);
+  return `<div class="card" style="margin-bottom:12px"><h3>How this plan works</h3><div class="sm">Working norm: <b>${meta.norm} field officers under each Sales Officer</b>. For every Sales Officer (and Senior Sales Officer) we project the year-end at the current pace and compare it with the full-year target. A new FO is taken at half of a typical Sales Officer's monthly sales in that state (and only half of that in the first two months). FOs are suggested up to the norm, enough to close the projected shortfall, or where one person looks after more than 60 beat dealers. Figures are estimates to guide decisions, not promises.</div></div>
+  <div class="kpis"><div class="kpi"><div class="l">Sales Officers</div><div class="v">${L.length}</div><div class="s">${fos} FOs under them now</div></div><div class="kpi"><div class="l">Gap to norm</div><div class="v">${sumK(L, p => p.staff.gap)}</div><div class="s">FOs to reach ${meta.norm} per SO</div></div><div class="kpi"><div class="l">Suggested now</div><div class="v">${sug}</div><div class="s">where it helps the target</div></div><div class="kpi"><div class="l">Expected by March</div><div class="v num">${money(up)}</div><div class="s">against projected shortfall ${money(short)}</div></div></div>
+  <div class="card" style="margin-bottom:12px"><h3>By state</h3><table><thead><tr><th>State</th><th class="r">Sales Officers</th><th class="r">FOs now</th><th class="r">Gap to norm</th><th class="r">Suggested</th><th class="r">New FO / month</th><th class="r">Expected by March</th><th class="r">Projected shortfall</th></tr></thead><tbody>
+  ${states.map(t => { const r = L.filter(p => p.st === t); return `<tr><td><b>${esc(TEAMS[t])}</b></td><td class="r num">${r.length}</td><td class="r num">${sumK(r, p => p.staff.fos)}</td><td class="r num">${sumK(r, p => p.staff.gap)}</td><td class="r num"><b>${sumK(r, p => p.staff.sug)}</b></td><td class="r num">${money(meta.foMed[t])}</td><td class="r num">${money(sumK(r, p => p.staff.uplift))}</td><td class="r num">${money(sumK(r, p => p.staff.short))}</td></tr>`; }).join('')}</tbody></table></div>
+  <div class="card"><h3>Where to add field officers first <span>biggest shortfall × most dealers per person · click for the profile</span></h3>${tbl([{ h: 'Grade', f: p => gb(p.grade) }, { h: 'Sales Officer', f: p => `<b>${esc(p.name)}</b><div class="muted sm">${esc(p.desig)} · ${esc(p.st)} · reports to ${esc((BY[p.mgr] || {}).name || '–')}</div>` }, { h: 'Field officers: now, add, still open', f: p => `<span class="slots" data-tip="${p.staff.fos} now, ${p.staff.sug} suggested, norm ${p.staff.norm}">${Array.from({ length: p.staff.norm }, (_, j) => `<i class="${j < p.staff.fos ? 'f' : j < p.staff.fos + p.staff.sug ? 's' : 'e'}"></i>`).join('')}</span> <b class="num" style="margin-left:6px">+${p.staff.sug}</b>` }, { h: 'Dealers / person', r: 1, f: p => p.staff.load }, { h: 'Target', r: 1, f: p => pc(ach(p)) }, { h: 'Projected shortfall', r: 1, f: p => money(p.staff.short) }, { h: 'Expected from new FOs', r: 1, f: p => money(p.staff.uplift) }], pr)}</div>`;
+}
+function mixw() {
+  const L = PEOPLE.filter(p => soil(p) != null && p.k.net > 0).sort((a, b) => soil(b) - soil(a)); S.list = L.map(p => p.id);
+  return `<div class="card" style="margin-bottom:12px"><h3>Soil Applications - Regular are the lowest-margin products</h3><div class="sm">Each person's share of team sales in Soil Applications - Regular (Drip ready is counted separately) against their state. Red = more than 5 points above the state. ${[...scope].map(t => meta.ref[t] ? `${esc(TEAMS[t])} ${pc(meta.ref[t].v[meta.cats.indexOf(meta.soil)] / meta.ref[t].tot)}` : '').filter(Boolean).join(' · ')}</div></div>
+  ${tbl([{ h: 'Grade', f: p => gb(p.grade) }, { h: 'Employee', f: p => `<b>${esc(p.name)}</b><div class="muted sm">${esc(p.desig)} · ${esc(p.st)}</div>` }, { h: 'Soil regular share', r: 1, f: p => `<b class="${soil(p) > p.raw.mixRef + 0.05 ? 'down' : ''}">${pc(soil(p))}</b>` }, { h: 'State', r: 1, f: p => pc(p.raw.mixRef) }, { h: 'Gap', r: 1, f: p => { const d = soil(p) - p.raw.mixRef; return `<span class="${d > 0.05 ? 'down' : ''}">${d >= 0 ? '+' : '−'}${Math.abs(d * 100).toFixed(0)} pts</span>`; } }, { h: 'Soil regular sales', r: 1, f: p => money(p.mix.v[meta.cats.indexOf(meta.soil)]) }, { h: 'Team net sales', r: 1, f: p => money(p.k.net) }], L)}`;
+}
+function collw() {
+  const L = PEOPLE.filter(p => p.k.os > 0 || p.k.coll > 0).sort((a, b) => b.k.o180 - a.k.o180); S.list = L.map(p => p.id);
+  return tbl([{ h: 'Grade', f: p => gb(p.grade) }, { h: 'Employee', f: p => `<b>${esc(p.name)}</b><div class="muted sm">${esc(p.desig)} · ${esc(p.st)}</div>` }, { h: 'Collected', r: 1, f: p => money(p.k.coll) }, { h: 'Coll. eff.', r: 1, f: p => `<span class="${p.raw.coll != null && p.raw.coll < 0.4 ? 'down' : ''}">${pc(p.raw.coll)}</span>` }, { h: 'Outstanding', r: 1, f: p => money(p.k.os) }, { h: '>180 days', r: 1, f: p => money(p.k.o180) }, { h: '>180 share', r: 1, f: p => `<span class="${p.raw.osh > 0.3 ? 'down' : ''}">${pc(p.raw.osh)}</span>` }, { h: '>365 days', r: 1, f: p => money(p.k.o365) }, { h: '>365 trend', r: 1, f: p => { if (!p.snaps || p.snaps.length < 2) return '–'; const a = p.snaps[p.snaps.length - 2][1], b = p.snaps[p.snaps.length - 1][1]; const d = b - a; return Math.abs(d) < 1 ? 'flat' : `<span class="${d > 0 ? 'down' : 'up'}">${d > 0 ? '▲' : '▼'} ${money(Math.abs(d))}</span>`; } }], L);
+}
+function how() {
+  const W = meta.weights, N = meta.wnames;
+  const rule = { target: 'Actual (target basis) ÷ target to date. 40% or less scores 0, 100% or more scores 100.', growth: 'Net sales vs the same period last year. −20% scores 0, +30% scores 100.', coll: 'Collections this year ÷ (outstanding on 31 Mar + net sales this year). 20% scores 0, 80% scores 100.', osh: 'Share of outstanding over 180 days. 50% or more scores 0, nothing overdue scores 100.', act: 'Beat-list dealers billed this year ÷ dealers on the beat list. 10% scores 0, 70% scores 100.', mix: 'Soil Applications - Regular share against the state. At or below the state scores 100; each point above the state takes off 4.', old: 'Share of outstanding over 365 days. 20% or more scores 0, nothing scores 100.' };
+  return `<div class="card how"><h3>How the grade is worked out</h3><p class="sm">Every number is for the person's whole team (everyone reporting under them), from the same data as the field map and Excel. Each parameter is scored 0–100; the grade is the weighted average. A parameter that does not apply (for example no target or no sales last year) is left out and the others are re-weighted.</p>
+  <table><thead><tr><th>Parameter</th><th class="r">Weight</th><th>How it is scored</th></tr></thead><tbody>${Object.keys(W).map(k => `<tr><td><b>${esc(N[k])}</b></td><td class="r">${W[k]}%</td><td class="sm">${esc(rule[k])}</td></tr>`).join('')}</tbody></table>
+  <p class="sm" style="margin-top:10px">Grades: ${meta.grades.map(([l, g]) => `${gb(g)} ${l ? l + '+' : 'below 35'}`).join(' &nbsp; ')}. Peer rank compares people at the same level in the same zone. Vacant and resigned positions are not graded.</p></div>`;
+}
+
+function signals() {
+  const F = S.sg || ''; const SG = meta.sign || {};
+  let L = []; PEOPLE.forEach(p => (p.sig || []).forEach(z => { if (z.sev !== 'good' && (!F || z.k === F)) L.push({ id: p.id, p, z }); }));
+  const sv = { high: 0, mid: 1, low: 2 }; L.sort((a, b) => sv[a.z.sev] - sv[b.z.sev] || b.z.w - a.z.w);
+  S.list = [...new Set(L.map(x => x.id))];
+  const cnt = {}; PEOPLE.forEach(p => (p.sig || []).forEach(z => { if (z.sev !== 'good') cnt[z.k] = (cnt[z.k] || 0) + 1; }));
+  return `<div class="card" style="margin-bottom:12px"><h3>Signals <span>patterns found in the invoices, returns, collections and outstanding that the totals do not show</span></h3>
+    <div class="filters" style="margin:0"><button class="btn sm ${F ? '' : 'on'}" data-sg="">All (${Object.values(cnt).reduce((a, b) => a + b, 0)})</button>${Object.keys(SG).filter(k => cnt[k]).map(k => `<button class="btn sm ${F === k ? 'on' : ''}" data-sg="${k}">${esc(SG[k])} (${cnt[k]})</button>`).join('')}</div></div>
+  ${tbl([{ h: 'Grade', f: r => gb(r.p.grade) }, { h: 'Employee', f: r => `<b>${esc(r.p.name)}</b><div class="muted sm">${esc(r.p.desig)}, ${esc(r.p.st)}</div>` }, { h: 'Signal', f: r => `<span class="fl ${r.z.sev === 'high' ? 'bad' : r.z.sev === 'mid' ? 'warn' : 'ok'}">${esc(SG[r.z.k] || r.z.k)}</span>` }, { h: 'What we see', f: r => esc(r.z.t) }], L)}`;
+}
+function brief() {
+  const R = roots; const fc = sumK(R, p => p.x.fc), lo = sumK(R, p => p.x.fLo), hi = sumK(R, p => p.x.fHi), tgt = sumK(R, p => p.k.aopFY), act = sumK(R, p => p.k.aopAct), ty = sumK(R, p => p.k.aopY);
+  const net = sumK(R, p => p.k.net), ly = sumK(R, p => p.k.ly), os = sumK(R, p => p.k.os), o180 = sumK(R, p => p.k.o180), o365 = sumK(R, p => p.k.o365), coll = sumK(R, p => p.k.coll), os0 = sumK(R, p => p.k.os0);
+  const opp = sumK(R, p => p.x.opp), lapRem = sumK(R, p => p.x.lapRem), od60 = sumK(R, p => p.x.od60);
+  const sts = [...scope].filter(t => R.some(p => p.st === t)).map(t => { const r = R.filter(p => p.st === t); return { t, fc: sumK(r, p => p.x.fc), tgt: sumK(r, p => p.k.aopFY), act: sumK(r, p => p.k.aopAct), ty: sumK(r, p => p.k.aopY), net: sumK(r, p => p.k.net), ly: sumK(r, p => p.k.ly), o180: sumK(r, p => p.k.o180), os: sumK(r, p => p.k.os) }; }).sort((a, b) => (b.tgt - b.fc) - (a.tgt - a.fc));
+  const fld = graded.filter(p => p.lvl >= 2);
+  const risks = []; PEOPLE.filter(p => p.lvl >= 2).forEach(p => (p.sig || []).forEach(z => { if ((z.sev === 'high' || z.sev === 'mid') && z.k !== 'forecast') risks.push({ p, z }); })); risks.sort((a, b) => b.z.w - a.z.w); { const seen = {}; for (let i = risks.length - 1; i >= 0; i--) seen[risks[i].z.k] = 0; const keep = risks.filter(r => (seen[r.z.k] = (seen[r.z.k] || 0) + 1) <= 3); risks.length = 0; risks.push(...keep); }
+  const gap = PEOPLE.filter(p => p.lvl >= 4 && p.status === 'Active' && p.k.aopFY > 0).sort((a, b) => (b.k.aopFY - b.x.fc) - (a.k.aopFY - a.x.fc)).slice(0, 6);
+  const best = fld.filter(p => p.lvl >= 4).sort((a, b) => b.score - a.score).slice(0, 6), oppL = PEOPLE.filter(p => p.lvl >= 4 && p.status === 'Active').sort((a, b) => b.x.opp - a.x.opp).slice(0, 6);
+  const fo = PEOPLE.filter(p => p.staff); const foS = sumK(fo, p => p.staff.sug), foU = sumK(fo, p => p.staff.uplift);
+  const worst = sts[0]; const sc = [...scope].sort().join(','); const nm = sc === 'AP,KA,TG,TN' ? 'South zone' : sc === 'MH,MP,WB' ? 'North zone' : 'Company';
+  const li = (p, v) => `<div class="frow" data-emp="${esc(p.id)}">${gb(p.grade)}<span class="n">${esc(p.name)} <span class="muted sm">${esc(p.lv)}, ${esc(p.st)}</span></span><b class="num sm">${v}</b></div>`;
+  return `<div class="brief"><div class="pbar"><span class="muted sm">${esc(nm)} · ${esc(meta.fy)} · data to ${fd(meta.salesTo)}</span><span class="sp"></span><button class="btn sm" id="prn">Print or save as PDF</button></div>
+  <section class="lede" style="grid-template-columns:1fr"><div><h1>${esc(nm)} is heading for ${money(fc)} against a ${money(tgt)} target: ${pc(tgt ? fc / tgt : null)}.</h1>
+    <p>Sales to date are ${money(act)}, ${pc(ty ? act / ty : null)} of the target to date and ${ly ? (net >= ly ? '+' : '') + pc(net / ly - 1) : '–'} on last year. If the rest of the year follows last year's season the year closes near ${money(sumK(R, p => p.x.fSeason || p.x.fLine))}; at the pace so far, near ${money(sumK(R, p => p.x.fLine))}. The forecast range is ${money(lo)} to ${money(hi)}. ${worst && worst.tgt ? `The largest gap is in ${esc(TEAMS[worst.t] || worst.t)}: ${money(worst.tgt - worst.fc)} short of its ${money(worst.tgt)} target.` : ''}</p>
+    <p>Collections cover ${pc(os0 + net ? coll / (os0 + net) : null)} of what was due. ${money(o180)} (${pc(os ? o180 / os : null)}) of the ${money(os)} outstanding is over 180 days and ${money(o365)} is over a year old. In the last 60 days ${money(od60)} was billed to dealers who already owe money for over 180 days.</p>
+    <p>The quickest sales to recover: lapsed dealers bought ${money(lapRem)} in the remaining months of last year. Adding the ${foS} field officers suggested in the plan is estimated to bring about ${money(foU)} by March.</p></div></section>
+  <div class="card" style="margin-bottom:14px"><h3>Forecast by state <span>largest gap first</span></h3><div class="tw" style="max-height:none"><table><thead><tr><th>State</th><th class="r">Sales to date</th><th class="r">On last year</th><th class="r">Target to date</th><th class="r">Year target</th><th class="r">Forecast</th><th class="r">Forecast vs target</th><th class="r">Gap</th><th class="r">Over 180 days</th></tr></thead><tbody>
+    ${sts.map(s => `<tr><td><b>${esc(TEAMS[s.t] || s.t)}</b></td><td class="r num">${money(s.act)}</td><td class="r num ${s.net >= s.ly ? 'up' : 'down'}">${s.ly ? (s.net >= s.ly ? '+' : '') + pc(s.net / s.ly - 1) : '–'}</td><td class="r num">${pc(s.ty ? s.act / s.ty : null)}</td><td class="r num">${money(s.tgt)}</td><td class="r num"><b>${money(s.fc)}</b></td><td class="r num ${s.tgt && s.fc / s.tgt < 0.85 ? 'down' : ''}">${pc(s.tgt ? s.fc / s.tgt : null)}</td><td class="r num">${s.tgt > s.fc ? money(s.tgt - s.fc) : '–'}</td><td class="r num">${pc(s.os ? s.o180 / s.os : null)}</td></tr>`).join('')}
+    <tr style="font-weight:700"><td>Total</td><td class="r num">${money(act)}</td><td class="r num">${ly ? (net >= ly ? '+' : '') + pc(net / ly - 1) : '–'}</td><td class="r num">${pc(ty ? act / ty : null)}</td><td class="r num">${money(tgt)}</td><td class="r num">${money(fc)}</td><td class="r num">${pc(tgt ? fc / tgt : null)}</td><td class="r num">${tgt > fc ? money(tgt - fc) : '–'}</td><td class="r num">${pc(os ? o180 / os : null)}</td></tr></tbody></table></div></div>
+  <div class="row g2"><div class="card"><h3>Largest forecast gaps <span>field staff, year target less forecast</span></h3>${gap.map(p => li(p, money(p.k.aopFY - p.x.fc) + ' short')).join('')}</div>
+    <div class="card"><h3>Most sales to win back <span>lapsed and declining dealers</span></h3>${oppL.map(p => li(p, money(p.x.opp))).join('')}</div></div>
+  <div class="row g2" style="margin-top:14px"><div class="card"><h3>Urgent signals <span>largest first</span></h3>${risks.slice(0, 7).map(r => `<div class="ins high" data-emp="${esc(r.p.id)}" style="cursor:pointer"><div class="tag">${esc(r.p.name)} <span class="muted sm" style="font-weight:400">${esc(r.p.lv)}, ${esc(r.p.st)}</span></div><div class="sm">${esc(r.z.t)}</div></div>`).join('') || '<div class="muted">None.</div>'}</div>
+    <div class="card"><h3>People to recognise <span>highest scores in the field</span></h3>${best.map(p => li(p, 'score ' + p.score.toFixed(0) + ' · ' + money(p.k.net))).join('')}</div></div></div>`;
+}
+
+function render() {
+  tabs(); const m = $('#main');
+  if (S.tab === 'overview') S.list = graded.filter(p => p.lvl >= 4).sort((a, b) => b.score - a.score).map(p => p.id);
+  if (S.tab === 'watch') S.list = watched();
+  m.innerHTML = S.tab === 'overview' ? overview() : S.tab === 'people' ? people() : S.tab === 'profile' ? profile() : S.tab === 'brief' ? brief() : S.tab === 'signals' ? signals() : S.tab === 'watch' ? watch() : S.tab === 'fo' ? fo() : S.tab === 'mix' ? mixw() : S.tab === 'coll' ? collw() : how();
+  if (S.tab === 'profile') save();
+  m.querySelectorAll('[data-sg]').forEach(b => b.onclick = () => { S.sg = b.dataset.sg; save(); render(); });
+  const pr = m.querySelector('#prn'); if (pr) pr.onclick = () => window.print();
+  wire(m); if (S.tab === 'people') wirePeople(); if (S.tab === 'profile') wireProfile();
+}
+const tip = $('#tip');
+document.addEventListener('mousemove', e => { const t = e.target.closest && e.target.closest('[data-tip]'); if (!t) { tip.style.display = 'none'; return; } tip.textContent = t.dataset.tip; tip.style.display = 'block'; tip.style.left = Math.min(innerWidth - 270, e.clientX + 12) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
+// type-a-name finder in the header, on every page
+(function () {
+  const dl = $('#findList'); dl.innerHTML = PEOPLE.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => `<option value="${esc(p.name)} · ${esc(p.lv)} · ${esc(p.st)}"></option>`).join('');
+  const f = $('#find'); const pick = () => { const v = f.value.trim().toLowerCase(); if (!v) return; const p = PEOPLE.find(x => `${x.name} · ${x.lv} · ${x.st}`.toLowerCase() === v) || PEOPLE.find(x => x.name.toLowerCase().startsWith(v)) || PEOPLE.find(x => x.name.toLowerCase().includes(v)); if (p) { f.value = ''; f.blur(); S.list = null; openEmp(p.id); } };
+  f.addEventListener('change', pick); f.addEventListener('keydown', e => { if (e.key === 'Enter') pick(); });
+})();
+if (location.hash) route(); else render();
+})();
+</script>
+</body>
+</html>
