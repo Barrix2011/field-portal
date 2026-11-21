@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Barrix · Field dashboard</title>
+<style>
+:root{color-scheme:light;--bg:#f4f3f0;--surface:#fcfcfb;--line:#dedcd6;--line-2:#c9c7c0;--ink:#151513;--ink-2:#52514e;--ink-3:#7d7b75;--accent:#2a78d6;--critical:#d03b3b;--brand:#1e5631}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#121211;--surface:#1a1a19;--line:#33332f;--line-2:#45453f;--ink:#f0efec;--ink-2:#c3c2b7;--ink-3:#8f8d84;--accent:#3987e5;--critical:#e66767;--brand:#3f9a5c}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#121211;--surface:#1a1a19;--line:#33332f;--line-2:#45453f;--ink:#f0efec;--ink-2:#c3c2b7;--ink-3:#8f8d84;--accent:#3987e5;--critical:#e66767;--brand:#3f9a5c}
+*{box-sizing:border-box}html,body{margin:0}
+body{min-height:100vh;background:radial-gradient(120% 80% at 100% 0%,color-mix(in srgb,var(--brand) 22%,transparent) 0%,transparent 60%),var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px 24px 22px;box-shadow:0 10px 40px rgba(0,0,0,.08)}
+.logo{width:48px;height:48px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;margin-bottom:14px}
+h1{margin:0;font-size:22px;letter-spacing:-.01em}.sub{color:var(--ink-3);font-size:13px;margin:4px 0 20px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin:12px 0 5px}
+input[type=tel],input[type=text]{width:100%;font:inherit;font-size:18px;letter-spacing:.04em;padding:11px 13px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);color:var(--ink);outline:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.keep{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);margin:14px 0 4px;font-weight:400}
+button{width:100%;margin-top:14px;font:inherit;font-weight:700;font-size:16px;padding:12px;border:0;border-radius:12px;background:var(--brand);color:#fff;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}
+.err{color:var(--critical);font-size:13px;min-height:18px;margin-top:10px}
+.foot{color:var(--ink-3);font-size:12px;margin-top:14px;text-align:center}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:s 0.8s linear infinite;vertical-align:-2px;margin-right:6px}@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<form class="card" id="f" autocomplete="on">
+  <div class="logo">B</div>
+  <h1>Field dashboard</h1>
+  <div class="sub">Barrix Agro Sciences · your dealers, sales, collections and dues</div>
+  <label for="ph">Mobile number</label>
+  <input type="tel" id="ph" inputmode="numeric" maxlength="14" placeholder="10-digit mobile" autocomplete="username" required>
+  <label for="dob">Password — date of birth</label>
+  <input type="text" id="dob" inputmode="numeric" maxlength="10" placeholder="DD-MM-YYYY" autocomplete="current-password" required>
+  <label class="keep"><input type="checkbox" id="keep" checked> Keep me signed in on this phone</label>
+  <button id="go" type="submit">Sign in</button>
+  <div class="err" id="err" role="alert"></div>
+  <div class="foot" id="upd">&nbsp;</div>
+</form>
+<script>
+(function () {
+  'use strict';
+  var ITER = 300000, LKEY = 'barrix-portal-login';
+  var $ = function (s) { return document.querySelector(s); };
+  var manifest = null;
+  var bust = function () { return manifest ? manifest.updated : String(Date.now()); };
+  fetch('manifest.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (m) {
+    manifest = m; if (m && m.updated) $('#upd').textContent = 'Data updated ' + new Date(m.updated).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + (m.salesTo ? ' · sales up to ' + m.salesTo.split('-').reverse().join('-') : '');
+  }).catch(function () {});
+  $('#ph').addEventListener('input', function (e) { e.target.value = e.target.value.replace(/[^\d+ ]/g, ''); });
+  $('#dob').addEventListener('input', function (e) { var d = e.target.value.replace(/\D/g, '').slice(0, 8); e.target.value = d.length > 4 ? d.slice(0, 2) + '-' + d.slice(2, 4) + '-' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d; });
+  var enc = function (s) { return new TextEncoder().encode(s); };
+  var unb64 = function (s) { var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+  async function open_(phone, dob) {
+    var id = hex(await crypto.subtle.digest('SHA-256', enc('barrix-portal-id|v1|' + phone))).slice(0, 32);
+    var r = await fetch('data/s_' + id[0] + '.json?v=' + encodeURIComponent(bust()), { cache: 'no-cache' });
+    if (!r.ok) throw new Error('net');
+    var shard = await r.json(); var sealed = shard[id];
+    if (!sealed) { var e = new Error('nouser'); throw e; }
+    var parts = sealed.split('.');
+    var base = await crypto.subtle.importKey('raw', enc(dob), 'PBKDF2', false, ['deriveKey']);
+    var key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: enc('barrix-portal-v1|' + phone), iterations: ITER, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    var gz;
+    try { gz = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(parts[0]) }, key, unb64(parts[1])); } catch (x) { throw new Error('baddob'); }
+    var txt = await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    return JSON.parse(txt);
+  }
+  async function signIn(phone, dob, keep) {
+    var b = await open_(phone, dob);
+    var app = await (await fetch('app.html?v=' + encodeURIComponent(bust()), { cache: 'no-cache' })).text();
+    if (keep) { try { localStorage.setItem(LKEY, JSON.stringify({ p: phone, d: dob })); } catch (x) {} }
+    b.cfg.rules = b.rules; b.cfg.published = manifest && manifest.updated;
+    var j = function (o) { return JSON.stringify(o).replace(/<\//g, '<\\/'); };
+    var put = function (html, slot, val) { var i = html.indexOf(slot); return i < 0 ? html : html.slice(0, i) + val + html.slice(i + slot.length); };
+    var html = put(put(put(app, '/*CFG*/', j(b.cfg)), '/*MASTER*/', j(b.M)), '/*SEED*/', j(b.store));
+    document.open(); document.write(html); document.close();
+  }
+  function msg(e) {
+    if (e.message === 'nouser') return 'This mobile number has no login. Please ask head office to add it.';
+    if (e.message === 'baddob') return 'Date of birth does not match this mobile number. Type it as DD-MM-YYYY.';
+    if (e.message === 'net') return 'Could not reach the server. Check your internet and try again.';
+    return 'Something went wrong: ' + e.message;
+  }
+  $('#f').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var phone = $('#ph').value.replace(/\D/g, ''); phone = phone.length >= 10 ? phone.slice(-10) : '';
+    var d = $('#dob').value.replace(/\D/g, '');
+    if (!phone) { $('#err').textContent = 'Enter your 10-digit mobile number.'; return; }
+    if (d.length !== 8) { $('#err').textContent = 'Enter your date of birth as DD-MM-YYYY.'; return; }
+    if (!window.crypto || !crypto.subtle || !window.DecompressionStream) { $('#err').textContent = 'Please open this link in the latest Chrome (or update your phone browser).'; return; }
+    var go = $('#go'); go.disabled = true; go.innerHTML = '<span class="spin"></span>Opening your dashboard…'; $('#err').textContent = '';
+    try { await signIn(phone, d, $('#keep').checked); }
+    catch (e) { $('#err').textContent = msg(e); go.disabled = false; go.textContent = 'Sign in'; }
+  });
+  try { var s = JSON.parse(localStorage.getItem(LKEY) || 'null'); if (s && s.p && s.d) { $('#ph').value = s.p; $('#dob').value = s.d.slice(0, 2) + '-' + s.d.slice(2, 4) + '-' + s.d.slice(4); var go = $('#go'); go.disabled = true; go.innerHTML = '<span class="spin"></span>Opening your dashboard…';
+    var wait = function () { signIn(s.p, s.d, true).catch(function (e) { $('#err').textContent = msg(e); go.disabled = false; go.textContent = 'Sign in'; if (e.message !== 'net') { try { localStorage.removeItem(LKEY); } catch (x) {} } }); };
+    setTimeout(function () { if (manifest) wait(); else setTimeout(wait, 600); }, 150); } } catch (x) {}
+})();
+</script>
+</body>
+</html>
