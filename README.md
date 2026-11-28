@@ -1,0 +1,1 @@
+Barrix team intelligence for the whole sales & marketing team: the GT states plus IBD & Exports. Each person's data is locked with their own login (mobile + date of birth) and shows only them and their team. /intel/ and /ibd/ now open this same site.
